@@ -1,0 +1,66 @@
+# -----------------------------
+# Python cache & temp files
+# -----------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# -----------------------------
+# Virtual environment
+# -----------------------------
+venv/
+
+# -----------------------------
+# Media files (recordings, screenshots)
+# -----------------------------
+*.mp4
+*.avi
+*.mov
+screenshots/
+
+# -----------------------------
+# Trained Models
+# -----------------------------
+models/*.joblib
+models/*.pkl
+
+# -----------------------------
+# Data Files
+# (Keep large datasets OUT of GitHub)
+# -----------------------------
+data/*.csv
+data/*.xlsx
+data/*.npy
+
+# IMPORTANT: keep data folder itself, ignore only contents
+!data/.gitkeep
+
+# -----------------------------
+# VS Code editor settings
+# -----------------------------
+.vscode/
+
+# -----------------------------
+# OS-specific files
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+# Logs
+# -----------------------------
+*.log
+
+# -----------------------------
+# Flask server cache
+# -----------------------------
+instance/
+
+# -----------------------------
+# virtual enviroment packages
+# -----------------------------
+env/Lib/
+env/Scripts/
+env/Include/
+env/pyvenv.cfg

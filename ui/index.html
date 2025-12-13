@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Real-Time Indian Sign Language A–Z Detector</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Real-Time Indian Sign Language A–Z Detector</h1>
+    <p class="authors">Developed by Your Name</p>
+    <button id="startBtn" onclick="startDemo()">Start</button>
+    <p class="hint">Make sure you've run the Flask app: <code>python src/web_app.py</code></p>
+    <div id="videoArea" style="display:none;">
+      <img id="videoFeed" src="http://localhost:5000/video_feed" alt="Live feed">
+    </div>
+  </div>
+
+  <script>
+    function startDemo() {
+      // will open the streaming page served by Flask
+      window.open("http://localhost:5000", "_blank");
+    }
+  </script>
+</body>
+</html>
