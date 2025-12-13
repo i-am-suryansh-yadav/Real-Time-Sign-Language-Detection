@@ -1,0 +1,143 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* NEON BACKGROUND */
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #0a1a3a, #020514);
+  color: #e6f0ff;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CONTAINER */
+.container {
+  width: 90%;
+  max-width: 1100px;
+  padding: 30px;
+  border-radius: 20px;
+  background: rgba(5, 10, 30, 0.85);
+  box-shadow: 0 0 45px rgba(0, 200, 255, 0.25);
+}
+
+/* HEADER */
+.header h1 {
+  font-size: 32px;
+  color: #bfe9ff;
+}
+
+.header p {
+  color: #9bbcff;
+  margin-bottom: 20px;
+}
+
+/* TIP LINE */
+.tip {
+  margin: 15px auto;
+  padding: 12px 20px;
+  max-width: 650px;
+  background: rgba(0, 200, 255, 0.15);
+  border: 1px solid rgba(0, 200, 255, 0.4);
+  border-radius: 14px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+/* MAIN LAYOUT */
+.main-content {
+  display: flex;
+  gap: 30px;
+  justify-content: space-between;
+}
+
+/* VIDEO SECTION */
+.video-section {
+  flex: 2;
+  text-align: center;
+}
+
+/* VIDEO CONTAINER */
+.video-container {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 2px solid rgba(0, 200, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.25);
+  transition: box-shadow 0.3s ease;
+}
+
+/* EXTRA GLOW WHEN DETECTING */
+.video-container.detecting {
+  box-shadow:
+    0 0 25px rgba(0, 200, 255, 0.8),
+    0 0 60px rgba(0, 200, 255, 0.6);
+  border-color: #00d9ff;
+}
+
+/* VIDEO */
+#videoStream {
+  width: 100%;
+  display: none;
+}
+
+/* PLACEHOLDER */
+.video-placeholder {
+  height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  font-size: 18px;
+  color: #9bbcff;
+}
+
+/* BUTTON */
+.btn {
+  margin-top: 15px;
+  padding: 14px 36px;
+  font-size: 18px;
+  font-weight: bold;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  color: white;
+  background: linear-gradient(135deg, #00c6ff, #5f00ff);
+  box-shadow: 0 0 25px rgba(0, 180, 255, 0.6);
+  transition: transform 0.2s ease;
+}
+
+.btn:hover {
+  transform: scale(1.05);
+}
+
+/* SIDEBAR */
+.sidebar {
+  flex: 1;
+}
+
+.status-panel {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(0, 200, 255, 0.08);
+  border: 1px solid rgba(0, 200, 255, 0.25);
+}
+
+.status-item {
+  margin-top: 12px;
+  font-size: 16px;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

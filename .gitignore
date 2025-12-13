@@ -1,56 +1,58 @@
-# -----------------------------
-# Python cache & temp files
-# -----------------------------
+# ===============================
+# Python virtual environment
+# ===============================
+env/
+venv/
+.venv/
+
+# ===============================
+# Python cache & system files
+# ===============================
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.log
 
-# -----------------------------
-# Virtual environment
-# -----------------------------
-venv/
+# ===============================
+# OS / Editor files
+# ===============================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
-# -----------------------------
-# Media files (recordings, screenshots)
-# -----------------------------
+# ===============================
+# Model & dataset (HEAVY FILES)
+# ===============================
+data/
+models/
+
+# ===============================
+# Generated media (DO NOT PUSH)
+# ===============================
+recordings/
+screenshots/
 *.mp4
 *.avi
 *.mov
-screenshots/
+*.jpg
+*.png
 
-# -----------------------------
-# Trained Models
-# -----------------------------
-models/*.joblib
-models/*.pkl
+# ===============================
+# Jupyter / temp files (if any)
+# ===============================
+.ipynb_checkpoints/
 
-# -----------------------------
-# Data Files
-# (Keep large datasets OUT of GitHub)
-# -----------------------------
-data/*.csv
-data/*.xlsx
-data/*.npy
+# ===============================
+# Environment / secrets
+# ===============================
+.env
 
-# IMPORTANT: keep data folder itself, ignore only contents
-!data/.gitkeep
-
-# -----------------------------
-# VS Code editor settings
-# -----------------------------
-.vscode/
-
-# -----------------------------
-# OS-specific files
-# -----------------------------
-.DS_Store
-Thumbs.db
-
-# -----------------------------
-# Logs
-# -----------------------------
-*.log
+# ===============================
+# Optional: ignore CSVs if large
+# ===============================
+*.csv
 
 # -----------------------------
 # Flask server cache
@@ -58,9 +60,13 @@ Thumbs.db
 instance/
 
 # -----------------------------
-# virtual enviroment packages
+# Logs
 # -----------------------------
-env/Lib/
-env/Scripts/
-env/Include/
-env/pyvenv.cfg
+*.log
+
+
+# -----------------------------
+# Trained Models
+# -----------------------------
+models/*.joblib
+models/*.pkl

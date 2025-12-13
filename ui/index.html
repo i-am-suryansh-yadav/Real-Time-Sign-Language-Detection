@@ -1,26 +1,92 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>Real-Time Indian Sign Language A–Z Detector</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Real-Time Indian Sign Language A–Z Detector</h1>
-    <p class="authors">Developed by Your Name</p>
-    <button id="startBtn" onclick="startDemo()">Start</button>
-    <p class="hint">Make sure you've run the Flask app: <code>python src/web_app.py</code></p>
-    <div id="videoArea" style="display:none;">
-      <img id="videoFeed" src="http://localhost:5000/video_feed" alt="Live feed">
-    </div>
-  </div>
+    <meta charset="UTF-8">
+    <title>Real-Time Indian Sign Language A–Z Detector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script>
-    function startDemo() {
-      // will open the streaming page served by Flask
-      window.open("http://localhost:5000", "_blank");
-    }
-  </script>
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <style>
+        /* 🔴 CAMERA SIZE FIX (KEY CHANGE) */
+        .video-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        #video {
+            width: 40vw;           /* ≈ 1/4th screen visually */
+            max-width: 640px;      /* safety limit */
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.35);
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 8px 14px;
+            font-size: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        #tip {
+            margin-top: 10px;
+            color: #ffd966;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-container">
+    <h1>Real-Time Indian Sign Language A–Z Detector</h1>
+    <p>Two-Hand ISL Recognition using AI & Computer Vision</p>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button onclick="startCam()">Start</button>
+        <button onclick="stopCam()">Stop</button>
+    </div>
+
+    <!-- TIP -->
+    <div id="tip" style="display:none;">
+        ✋ Tip: Keep both hands clearly visible in the center
+    </div>
+
+    <!-- VIDEO -->
+    <div class="video-container">
+        <img id="video" src="" alt="Live ISL Feed">
+    </div>
+
+    <p style="margin-top:20px;">
+        Developed by <strong>Suryansh Yadav</strong>
+    </p>
+</div>
+
+<script>
+function startCam(){
+    fetch("/start", { method: "POST" })
+        .then(() => {
+            document.getElementById("video").src = "/video_feed";
+            document.getElementById("tip").style.display = "block";
+        });
+}
+
+function stopCam(){
+    fetch("/stop", { method: "POST" })
+        .then(() => {
+            document.getElementById("video").src = "";
+            document.getElementById("tip").style.display = "none";
+        });
+}
+</script>
+
 </body>
 </html>
