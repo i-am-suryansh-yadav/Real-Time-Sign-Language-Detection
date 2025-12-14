@@ -32,7 +32,6 @@ models/
 # Generated media (DO NOT PUSH)
 # ===============================
 recordings/
-screenshots/
 *.mp4
 *.avi
 *.mov
