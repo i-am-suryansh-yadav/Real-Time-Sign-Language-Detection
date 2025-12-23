@@ -8,11 +8,12 @@ A real-time computer vision system that detects **Indian Sign Language alphabet 
 ## 🚀 Features
 
 ### 🎥 Real-Time Hand Tracking
-- Uses **MediaPipe Hands** to extract 21 landmark points (63 values)
+- Uses **MediaPipe Hands** to extract 21 landmark points (63 values per hand)
 - Displays landmarks on webcam feed in real-time
+- Optimized for higher FPS with lower resolution (640x480)
 
 ### 🔤 ISL Alphabet Recognition
-- Trained ML model (RandomForest) achieves **98–100% accuracy**
+- Trained ML model (RandomForest) achieves **99% accuracy**
 - Predicts letter + Hindi equivalent:
   - A → क
   - B → ख
@@ -27,11 +28,15 @@ A real-time computer vision system that detects **Indian Sign Language alphabet 
   `H E L L O → HELLO`
 
 ### 💾 Demo Recording
-- Press **R** to record live demo: `demo_week1.mp4`
+- Press **R** to start/stop recording live demo videos (saved as MP4)
 
 ### 🌐 Web App (Flask)
 - Stream webcam feed + predictions directly in browser
 - Works on Chrome, Edge, Firefox
+- Beautiful overlay with shadows for text readability
+
+### 📈 FPS Monitoring
+- Real-time FPS display to ensure smooth performance
 
 ---
 
@@ -54,97 +59,36 @@ Real-Time-Sign-Language-Detection/
 │ └── isl_landmarks.csv # Final merged dataset (ignored in Git)  
 │  
 ├── models/  
-│ └── isl_model.pkl # Trained ML model (ignored in Git)  
+│ └── rf_model.joblib # Trained ML model (ignored in Git)  
 │  
 ├── screenshots/ # Saved screenshots (optional)  
 │  
+├── recordings/ # Recorded demo videos (optional)  
+│  
 ├── src/  
-│ ├── convert_photo_to_landmarks.py # Image to landmark converter  
-│ ├── merge.py # Merge CSVs into one dataset  
+│ ├── convert_images_to_landmarks.py # Image to landmark converter  
+│ ├── detect_live.py # Live webcam letter detection with recording  
+│ ├── hand_landmarks.py # Hand landmark extraction script  
+│ ├── merge_csvs.py # Merge CSVs into one dataset  
+│ ├── test_camera.py # Simple camera test script  
 │ ├── train_model.py # Train the RandomForest model  
-│ ├── detect_live.py # Live webcam letter detection  
 │ └── web_app.py # Flask app for web UI  
 │  
 ├── ui/  
-│ ├── index.html # Landing page  
-│ ├── style.css # Neon-themed styling  
-│ └── static/ # Static resources like CSS  
+│ ├── index.html # Landing page with features, demo, about  
+│ └── static/  
+│     ├── hand.png # Hero image  
+│     ├── script.js # JS for camera controls  
+│     ├── style.css # Styling  
+│     └── demo.mp4 # Placeholder for demo video (add your own)  
 │  
 ├── .gitignore  
 ├── README.md  
-  
+└── requirements.txt  
+
 ## 🛠 Requirements  
-  
+
 Install all dependencies inside the virtual environment:  
-  
-pip install opencv-python mediapipe scikit-learn numpy pandas joblib flask  
-  
-⚙️ Setup Guide  
-1️⃣ Clone the Repository  
-git clone https://github.com/<your-username>/Real-Time-Sign-Language-Detection.git  
-cd Real-Time-Sign-Language-Detection  
-2️⃣ Create and Activate Virtual Environment  
-python -m venv env  
-env\Scripts\activate  
-3️⃣ Install Libraries  
-pip install -r requirements.txt  
-# or install manually as shown above  
-4️⃣ Add Dataset  
-Place your final CSV here:  
-data/isl_landmarks.csv  
-5️⃣ Train the Model  
-python src/train_model.py  
-▶️ Run the Real-Time Detector  
-python src/detect_live.py  
-  
-🎛 Keyboard Controls:  
-Key	Action  
-r	Start/stop recording  
-s	Save screenshot  
-c	Clear formed word  
-q	Quit  
-  
-🌐 Web Application (Browser View)  
-python src/web_app.py  
-Then open:  
-http://localhost:5000  
-  
-You will see:  
-Live webcam  
-Detected landmarks  
-Prediction (A–Z)  
-Hindi letter  
-Confidence score  
-  
-📸 Screenshots  
-Screenshots are saved in the screenshots/ folder. Recommended shots:  
-  
-Each letter A–Z  
-  
-Word builder in action  
-  
-Hindi letter display  
-  
-Flask web app interface  
-  
-🧠 Technologies Used  
-Technology	Purpose  
-MediaPipe Hands	Real-time hand landmark extraction  
-OpenCV	Webcam video + annotation overlay  
-scikit-learn	ML classification (RandomForest)  
-NumPy	Vector preprocessing  
-Joblib	Save/load ML models  
-Flask	Live browser-based UI  
-HTML/CSS	Neon-style user interface  
-  
-🎯 Accuracy Achieved  
-Dataset: 26 letters × 50 samples × 5 datasets = 6,500+ samples  
-  
-Accuracy: 98–100% on clean data  
-  
-Inference speed: Real-time (30 FPS on average webcam)  
-  
-👨‍💻 Developer  
-Developed by:  
-Suryansh Yadav  
-December 2025  
+
+```bash
+pip install opencv-python mediapipe scikit-learn numpy pandas joblib flask

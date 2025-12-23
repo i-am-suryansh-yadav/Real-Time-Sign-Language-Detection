@@ -1,92 +1,78 @@
+<!-- ui/index.html (Updated with detection toggle button) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Real-Time Indian Sign Language A–Z Detector</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-    <style>
-        /* 🔴 CAMERA SIZE FIX (KEY CHANGE) */
-        .video-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        #video {
-            width: 40vw;           /* ≈ 1/4th screen visually */
-            max-width: 640px;      /* safety limit */
-            height: auto;
-            border-radius: 14px;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.35);
-        }
-
-        .controls {
-            margin-top: 10px;
-        }
-
-        button {
-            padding: 8px 14px;
-            font-size: 16px;
-            margin-right: 8px;
-            cursor: pointer;
-        }
-
-        #tip {
-            margin-top: 10px;
-            color: #ffd966;
-            font-size: 16px;
-        }
-    </style>
+    <title>SignSync</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-
 <body>
+    <header>
+        <div class="logo">🖐️ SignSync</div>
+        <nav>
+            <a href="#features">Features</a>
+            <a href="#demo">Demo</a>
+            <a href="#about">About</a>
+        </nav>
+        <button id="launch-header" class="launch-btn">Launch Camera</button>
+    </header>
 
-<div class="app-container">
-    <h1>Real-Time Indian Sign Language A–Z Detector</h1>
-    <p>Two-Hand ISL Recognition using AI & Computer Vision</p>
+    <section class="hero">
+        <div class="hero-text">
+            <h1>Speak with your hands.<br>We'll do the rest.</h1>
+            <p>An AI-powered bridge between sign language and spoken words.<br>Real-time, browser-based, and accessible to everyone.</p>
+            <button id="launch-hero" class="launch-btn">Launch Camera</button>
+            <a href="#demo" class="demo-link">Watch Demo</a>
+        </div>
+        <div class="hero-image">
+            <img src="/static/hand.png" alt="Sign language hand">
+        </div>
+    </section>
 
-    <!-- CONTROLS -->
-    <div class="controls">
-        <button onclick="startCam()">Start</button>
-        <button onclick="stopCam()">Stop</button>
-    </div>
+    <section id="camera-section" class="hidden">
+        <h2>Sign Language Detection</h2>
+        <div class="video-container">
+            <img id="video-feed" src="" alt="Video Feed">
+        </div>
+        <button id="toggle-detection" class="detection-toggle-btn">Start Detection</button>
+        <button id="stop-camera" class="stop-btn">Stop Camera</button>
+    </section>
 
-    <!-- TIP -->
-    <div id="tip" style="display:none;">
-        ✋ Tip: Keep both hands clearly visible in the center
-    </div>
+    <!-- Features Section -->
+    <section id="features">
+        <h2>Features</h2>
+        <ul>
+            <li><strong>Robust Design:</strong> Built with efficient computer vision pipelines for reliable performance.</li>
+            <li><strong>Prediction Confidence:</strong> Displays real-time confidence percentage for each detected letter.</li>
+            <li><strong>Hindi Mapping:</strong> Maps English letters to corresponding Hindi characters for ISL.</li>
+            <li><strong>FPS Detector:</strong> Monitors and displays frames per second for smooth operation.</li>
+            <li><strong>Word Builder:</strong> Constructs words from sequential sign predictions.</li>
+            <li><strong>Two-Hand Support:</strong> Detects gestures using one or two hands for flexibility.</li>
+            <li><strong>Demo Recording:</strong> Easily record sessions for demonstrations or analysis.</li>
+            <li><strong>Browser Accessibility:</strong> Run detection directly in your web browser without installations.</li>
+        </ul>
+    </section>
 
-    <!-- VIDEO -->
-    <div class="video-container">
-        <img id="video" src="" alt="Live ISL Feed">
-    </div>
+    <!-- Demo Section with Video Placeholder -->
+    <section id="demo">
+        <h2>Demo</h2>
+        <p>Watch a demonstration of SignSync in action. (Add your demo video to /ui/static/demo.mp4)</p>
+        <video controls width="600">
+            <source src="/static/demo.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </section>
 
-    <p style="margin-top:20px;">
-        Developed by <strong>Suryansh Yadav</strong>
-    </p>
-</div>
+    <!-- About Section -->
+    <section id="about">
+        <h2>About</h2>
+        <p>SignSync is a real-time Indian Sign Language (ISL) detection system designed to bridge the gap between sign language users and spoken communication. It uses advanced AI and computer vision to recognize A-Z gestures with high accuracy.</p>
+        <p>Developed by Suryansh Yadav, a passionate developer focused on accessible technology.</p>
+        <p>Contact: suryansh.1251010449@vit.edu</p>
+        <p>This project leverages open-source libraries like MediaPipe, OpenCV, and scikit-learn to provide a seamless experience. Future updates may include voice output and expanded gesture support.</p>
+    </section>
 
-<script>
-function startCam(){
-    fetch("/start", { method: "POST" })
-        .then(() => {
-            document.getElementById("video").src = "/video_feed";
-            document.getElementById("tip").style.display = "block";
-        });
-}
-
-function stopCam(){
-    fetch("/stop", { method: "POST" })
-        .then(() => {
-            document.getElementById("video").src = "";
-            document.getElementById("tip").style.display = "none";
-        });
-}
-</script>
-
+    <script src="/static/script.js"></script>
 </body>
 </html>
