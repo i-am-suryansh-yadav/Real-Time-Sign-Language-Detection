@@ -1,77 +1,215 @@
-<!-- ui/index.html (Updated with detection toggle button) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SignSync</title>
+    <title>SignSync - AI Sign Language Detection</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <header>
-        <div class="logo">🖐️ SignSync</div>
+        <div class="logo">
+            <span class="logo-icon">🖐️</span>
+            <span class="logo-text">SignSync</span>
+        </div>
         <nav>
-            <a href="#features">Features</a>
-            <a href="#demo">Demo</a>
-            <a href="#about">About</a>
+            <a href="#home" class="nav-link active" data-page="home">Home</a>
+            <a href="#features" class="nav-link" data-page="features">Features</a>
+            <a href="#demo" class="nav-link" data-page="demo">Demo</a>
+            <a href="#about" class="nav-link" data-page="about">About</a>
         </nav>
-        <button id="launch-header" class="launch-btn">Launch Camera</button>
+        <button id="launch-header" class="launch-btn">
+            <span class="btn-glow"></span>
+            Launch Camera
+        </button>
     </header>
 
-    <section class="hero">
-        <div class="hero-text">
-            <h1>Speak with your hands.<br>We'll do the rest.</h1>
-            <p>An AI-powered bridge between sign language and spoken words.<br>Real-time, browser-based, and accessible to everyone.</p>
-            <button id="launch-hero" class="launch-btn">Launch Camera</button>
-            <a href="#demo" class="demo-link">Watch Demo</a>
-        </div>
-        <div class="hero-image">
-            <img src="/static/hand.png" alt="Sign language hand">
-        </div>
-    </section>
+    <!-- Home Page -->
+    <div id="home-page" class="page active">
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="glitch" data-text="Speak with your hands.">Speak with your hands.</h1>
+                    <h1 class="glitch-secondary" data-text="We'll do the rest.">We'll do the rest.</h1>
+                    <p class="hero-description">An AI-powered bridge between sign language and spoken words.<br>Real-time, browser-based, and accessible to everyone.</p>
+                    <div class="hero-buttons">
+                        <button id="launch-hero" class="launch-btn primary">
+                            <span class="btn-glow"></span>
+                            Launch Camera
+                        </button>
+                        <a href="#demo" class="demo-link" data-page="demo">
+                            <span class="play-icon">▶</span>
+                            Watch Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="hand-container">
+                        <img src="/static/hand.png" alt="Sign language hand" class="floating">
+                        <div class="glow-effect"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <section id="camera-section" class="hidden">
-        <h2>Sign Language Detection</h2>
-        <div class="video-container">
-            <img id="video-feed" src="" alt="Video Feed">
-        </div>
-        <button id="toggle-detection" class="detection-toggle-btn">Start Detection</button>
-        <button id="stop-camera" class="stop-btn">Stop Camera</button>
-    </section>
+        <!-- CAMERA SECTION - FIXED LAYOUT -->
+        <section id="camera-section" class="hidden camera-section-compact">
+            <div class="camera-container-wrapper">
+                <h2 class="section-title">Sign Language Detection</h2>
+                
+                <div class="camera-controls-layout">
+                    <!-- Video Container -->
+                    <div class="video-wrapper">
+                        <div class="video-container" id="video-container">
+                            <img id="video-feed" src="" alt="Video Feed">
+                            <div class="corner-decoration top-left"></div>
+                            <div class="corner-decoration top-right"></div>
+                            <div class="corner-decoration bottom-left"></div>
+                            <div class="corner-decoration bottom-right"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls Panel -->
+                    <div class="controls-panel">
+                        <div class="control-group">
+                            <button id="toggle-detection" class="detection-toggle-btn">
+                                <span class="btn-glow"></span>
+                                <span class="btn-icon">●</span>
+                                Start Detection
+                            </button>
+                            
+                            <button id="stop-camera" class="stop-btn">
+                                <span class="btn-glow"></span>
+                                Stop Camera
+                            </button>
+                        </div>
+                        
+                        <!-- Word Display -->
+                        <div class="word-display-box">
+                            <h3>Detected Word:</h3>
+                            <div id="word-output" class="word-output">...</div>
+                            <button id="clear-word" class="clear-word-btn">Clear Word</button>
+                        </div>
+                        
+                        <!-- Info Box -->
+                        <div class="info-box">
+                            <div class="info-item">
+                                <span class="info-label">Status:</span>
+                                <span id="status-text" class="info-value">Stopped</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">FPS:</span>
+                                <span id="fps-text" class="info-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
 
-    <!-- Features Section -->
-    <section id="features">
-        <h2>Features</h2>
-        <ul>
-            <li><strong>Robust Design:</strong> Built with efficient computer vision pipelines for reliable performance.</li>
-            <li><strong>Prediction Confidence:</strong> Displays real-time confidence percentage for each detected letter.</li>
-            <li><strong>Hindi Mapping:</strong> Maps English letters to corresponding Hindi characters for ISL.</li>
-            <li><strong>FPS Detector:</strong> Monitors and displays frames per second for smooth operation.</li>
-            <li><strong>Word Builder:</strong> Constructs words from sequential sign predictions.</li>
-            <li><strong>Two-Hand Support:</strong> Detects gestures using one or two hands for flexibility.</li>
-            <li><strong>Demo Recording:</strong> Easily record sessions for demonstrations or analysis.</li>
-            <li><strong>Browser Accessibility:</strong> Run detection directly in your web browser without installations.</li>
-        </ul>
-    </section>
+    <!-- Features Page -->
+    <div id="features-page" class="page">
+        <section class="content-section">
+            <h2 class="section-title">Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Robust Design</h3>
+                    <p>Built with efficient computer vision pipelines for reliable performance.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Prediction Confidence</h3>
+                    <p>Displays real-time confidence percentage for each detected letter.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🇮🇳</div>
+                    <h3>Hindi Mapping</h3>
+                    <p>Maps English letters to corresponding Hindi characters for ISL.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>High Performance</h3>
+                    <p>Optimized for 20+ FPS even with two-hand detection.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✍️</div>
+                    <h3>Word Builder</h3>
+                    <p>Constructs words from sequential sign predictions.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👐</div>
+                    <h3>Two-Hand Support</h3>
+                    <p>Detects gestures using one or two hands for flexibility.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎥</div>
+                    <h3>Real-Time Detection</h3>
+                    <p>Instant sign recognition with minimal latency.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Browser Accessibility</h3>
+                    <p>Run detection directly in your web browser without installations.</p>
+                </div>
+            </div>
+        </section>
+    </div>
 
-    <!-- Demo Section with Video Placeholder -->
-    <section id="demo">
-        <h2>Demo</h2>
-        <p>Watch a demonstration of SignSync in action. (Add your demo video to /ui/static/demo.mp4)</p>
-        <video controls width="600">
-            <source src="/static/demo.mp4" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
-    </section>
+    <!-- Demo Page -->
+    <div id="demo-page" class="page">
+        <section class="content-section">
+            <h2 class="section-title">Demo</h2>
+            <p class="demo-description">Watch a demonstration of SignSync in action.</p>
+            <div class="video-demo-container">
+                <video controls width="800">
+                    <source src="/static/demo.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <p class="demo-note">Add your demo video to /ui/static/demo.mp4</p>
+            </div>
+        </section>
+    </div>
 
-    <!-- About Section -->
-    <section id="about">
-        <h2>About</h2>
-        <p>SignSync is a real-time Indian Sign Language (ISL) detection system designed to bridge the gap between sign language users and spoken communication. It uses advanced AI and computer vision to recognize A-Z gestures with high accuracy.</p>
-        <p>Developed by Suryansh Yadav, a passionate developer focused on accessible technology.</p>
-        <p>Contact: suryansh.1251010449@vit.edu</p>
-        <p>This project leverages open-source libraries like MediaPipe, OpenCV, and scikit-learn to provide a seamless experience. Future updates may include voice output and expanded gesture support.</p>
-    </section>
+    <!-- About Page -->
+    <div id="about-page" class="page">
+        <section class="content-section">
+            <h2 class="section-title">About SignSync</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p class="about-intro">SignSync is a real-time Indian Sign Language (ISL) detection system designed to bridge the gap between sign language users and spoken communication. It uses advanced AI and computer vision to recognize A-Z gestures with high accuracy.</p>
+                    
+                    <div class="about-tech">
+                        <h3>Technology Stack</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">MediaPipe</span>
+                            <span class="tech-tag">OpenCV</span>
+                            <span class="tech-tag">scikit-learn</span>
+                            <span class="tech-tag">Python</span>
+                            <span class="tech-tag">Flask</span>
+                        </div>
+                    </div>
+
+                    <div class="about-developer">
+                        <h3>Developer</h3>
+                        <p><strong>Suryansh Yadav</strong></p>
+                        <p>A passionate developer focused on accessible technology.</p>
+                        <p class="contact">📧 suryansh.1251010449@vit.edu</p>
+                    </div>
+
+                    <div class="about-future">
+                        <h3>Future Roadmap</h3>
+                        <p>Future updates may include voice output, expanded gesture support, and multi-language recognition capabilities.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>© 2025 SignSync. Empowering communication through AI.</p>
+    </footer>
 
     <script src="/static/script.js"></script>
 </body>

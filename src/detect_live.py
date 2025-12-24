@@ -1,4 +1,9 @@
-# detect_live.py (With recording toggle on 'r', Hindi mapping, word builder, improved overlay for beautiful UI, optimized FPS)
+"""
+detect_live.py - Optimized Real-Time Sign Language Detection
+Features: Two-hand detection, word builder, Hindi mapping, recording, screenshots
+Controls: R=Record, S=Screenshot, C=Clear, Q=Quit
+OPTIMIZED FOR BETTER FPS
+"""
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -8,146 +13,289 @@ import os
 from collections import deque, Counter
 from datetime import datetime
 
-os.makedirs("screenshots", exist_ok=True)
-os.makedirs("recordings", exist_ok=True)
-
-# Load model
-data = joblib.load("models/rf_model.joblib")
-model = data["model"]
-le = data["label_encoder"]
-
-# Hindi map
-HINDI_MAP = {
-    'A':'क','B':'ख','C':'ग','D':'घ','E':'ङ','F':'च','G':'छ','H':'ज','I':'झ','J':'ञ',
-    'K':'ट','L':'ठ','M':'ड','N':'ढ','O':'ण','P':'त','Q':'थ','R':'द','S':'ध','T':'न',
-    'U':'प','V':'फ','W':'ब','X':'भ','Y':'म','Z':'य'
-}
-
-# Globals
-buffer = deque(maxlen=10)
-spoken = ""
-word_builder = []
-mp_hands = mp.solutions.hands
-mp_draw = mp.solutions.drawing_utils
-
-cap = cv2.VideoCapture(0)
-# Optimize camera for FPS
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-cap.set(cv2.CAP_PROP_FPS, 30)
-
-prev_time = time.time()
-
-recording = False
-video_writer = None
-
-def extract_two_hands(results):
-    left = np.zeros(63)
-    right = np.zeros(63)
-    if results.multi_hand_landmarks:
-        for i, hand in enumerate(results.multi_hand_landmarks[:2]):
-            pts = []
-            for lm in hand.landmark:
-                pts.extend([lm.x, lm.y, lm.z])
-            if i == 0:
-                left = np.array(pts)
-            else:
-                right = np.array(pts)
-    return np.concatenate([left, right])
-
-with mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5) as hands:
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        frame = cv2.flip(frame, 1)
-        # No resize here - already set to 640x480 for faster processing
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(rgb)
-
-        hand_detected = bool(results.multi_hand_landmarks)
-
-        for h in results.multi_hand_landmarks or []:
-            mp_draw.draw_landmarks(frame, h, mp_hands.HAND_CONNECTIONS)
-
-        features = extract_two_hands(results).reshape(1, -1)
-        probs = model.predict_proba(features)[0]
-        idx = np.argmax(probs)
-
-        pred = str(le.inverse_transform([idx])[0]).upper()
-        conf = probs[idx] * 100
-
-        buffer.append(pred)
-        final = Counter(buffer).most_common(1)[0][0]
-
-        # Word builder
-        if final != spoken:
-            spoken = final
-            word_builder.append(final)
-            if len(word_builder) > 12:
-                word_builder = word_builder[-12:]
-
-        fps = int(1 / (time.time() - prev_time + 1e-5))
-        prev_time = time.time()
-
-        # Beautiful overlay inspired by YT: semi-transparent black box for status, big prediction text with shadow
-        overlay = frame.copy()
+class SignLanguageDetector:
+    def __init__(self, model_path="models/rf_model.joblib"):
+        """Initialize detector"""
+        os.makedirs("screenshots", exist_ok=True)
+        os.makedirs("recordings", exist_ok=True)
         
-        # Status box (top left)
-        cv2.rectangle(overlay, (10, 10), (300, 40), (0, 0, 0), -1)
-        cv2.putText(overlay, f"FPS: {fps} | Hand: {'Detected' if hand_detected else 'Not Detected'}",
-                    (15, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-
-        # Prediction box (bottom left, larger)
-        text = f"{final} - {HINDI_MAP.get(final, '')} ({conf:.1f}%)"
-        (tw, th), _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 1.5, 3)
-        cv2.rectangle(overlay, (10, frame.shape[0] - th - 40), (10 + tw + 20, frame.shape[0] - 20), (0, 0, 0), -1)
-        # Shadow text
-        cv2.putText(overlay, text, (15 + 2, frame.shape[0] - 25 + 2), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 0), 3)
-        # Main text
-        cv2.putText(overlay, text, (15, frame.shape[0] - 25), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 0), 3)
-
+        print("=" * 70)
+        print("🤖 Loading Model...")
+        try:
+            model_data = joblib.load(model_path)
+            self.model = model_data["model"]
+            self.label_encoder = model_data["label_encoder"]
+            self.feature_size = model_data.get("feature_size", 126)
+            print(f"✅ Model loaded successfully")
+            print(f"   Classes: {len(self.label_encoder.classes_)}")
+            print(f"   Feature size: {self.feature_size}")
+        except Exception as e:
+            print(f"❌ Error loading model: {str(e)}")
+            raise
+        
+        self.HINDI_MAP = {
+            'A':'क','B':'ख','C':'ग','D':'घ','E':'ङ','F':'च','G':'छ','H':'ज','I':'झ','J':'ञ',
+            'K':'ट','L':'ठ','M':'ड','N':'ढ','O':'ण','P':'त','Q':'थ','R':'द','S':'ध','T':'न',
+            'U':'प','V':'फ','W':'ब','X':'भ','Y':'म','Z':'य'
+        }
+        
+        self.mp_hands = mp.solutions.hands
+        self.mp_draw = mp.solutions.drawing_utils
+        self.mp_draw_styles = mp.solutions.drawing_styles
+        
+        self.buffer = deque(maxlen=10)
+        self.word_builder = []
+        self.last_spoken = ""
+        self.recording = False
+        self.video_writer = None
+        self.prev_time = time.time()
+        self.fps_history = deque(maxlen=30)
+        
+        print("=" * 70 + "\n")
+    
+    def extract_two_hands(self, results):
+        """Extract features from both hands (126 features) - OPTIMIZED"""
+        left_hand = np.zeros(63, dtype=np.float32)
+        right_hand = np.zeros(63, dtype=np.float32)
+        
+        if results.multi_hand_landmarks and results.multi_handedness:
+            for hand_landmarks, handedness in zip(
+                results.multi_hand_landmarks, results.multi_handedness
+            ):
+                hand_label = handedness.classification[0].label
+                
+                # Faster extraction using list comprehension
+                landmarks = [coord for lm in hand_landmarks.landmark 
+                           for coord in (lm.x, lm.y, lm.z)]
+                
+                landmarks_array = np.array(landmarks, dtype=np.float32)
+                
+                if hand_label == "Left":
+                    left_hand = landmarks_array
+                elif hand_label == "Right":
+                    right_hand = landmarks_array
+        
+        return np.concatenate([left_hand, right_hand])
+    
+    def calculate_fps(self):
+        """Calculate FPS"""
+        current_time = time.time()
+        fps = 1 / (current_time - self.prev_time + 1e-6)
+        self.prev_time = current_time
+        self.fps_history.append(fps)
+        avg_fps = sum(self.fps_history) / len(self.fps_history)
+        return int(fps), int(avg_fps)
+    
+    def draw_overlay(self, frame, prediction_data):
+        """Draw optimized overlay"""
+        h, w = frame.shape[:2]
+        
+        letter = prediction_data['letter']
+        hindi = prediction_data['hindi']
+        confidence = prediction_data['confidence']
+        hand_detected = prediction_data['hand_detected']
+        num_hands = prediction_data['num_hands']
+        fps = prediction_data['fps']
+        avg_fps = prediction_data['avg_fps']
+        
+        # Top bar - simplified
+        cv2.rectangle(frame, (0, 0), (w, 45), (20, 20, 40), -1)
+        
+        fps_color = (0, 255, 0) if fps > 20 else (0, 165, 255) if fps > 10 else (0, 0, 255)
+        cv2.putText(frame, f"FPS: {fps} | Avg: {avg_fps}", 
+                    (10, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, fps_color, 2)
+        
+        hand_status = f"Hands: {num_hands}/2"
+        hand_color = (0, 255, 0) if num_hands == 2 else (0, 165, 255) if num_hands == 1 else (255, 100, 100)
+        cv2.putText(frame, hand_status, (w - 140, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, hand_color, 2)
+        
+        # Prediction display
+        if hand_detected:
+            cv2.rectangle(frame, (0, h - 80), (400, h), (20, 20, 40), -1)
+            
+            pred_text = f"{letter} - {hindi}"
+            conf_color = (0, 255, 0) if confidence > 80 else (0, 255, 255) if confidence > 60 else (0, 165, 255)
+            
+            cv2.putText(frame, pred_text, (10, h - 45), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, conf_color, 2)
+            cv2.putText(frame, f"Conf: {confidence:.1f}%", (10, h - 15), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
+        
         # Word builder
-        word_text = "Word: " + ''.join(word_builder)
-        cv2.putText(overlay, word_text, (10, frame.shape[0] - 60), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+        if self.word_builder:
+            word_text = "Word: " + ''.join(self.word_builder)
+            cv2.rectangle(frame, (w - min(len(word_text) * 15 + 20, w), 55), (w, 85), (20, 20, 40), -1)
+            cv2.putText(frame, word_text, (w - min(len(word_text) * 15 + 10, w - 10), 75), 
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
+        
+        # Recording indicator
+        if self.recording:
+            cv2.circle(frame, (w - 30, 25), 8, (0, 0, 255), -1)
+        
+        return frame
+    
+    def start_recording(self, frame_size):
+        """Start recording"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"recordings/demo_{timestamp}.mp4"
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        self.video_writer = cv2.VideoWriter(filename, fourcc, 20.0, frame_size)
+        self.recording = True
+        print(f"🎥 Recording: {filename}")
+        return filename
+    
+    def stop_recording(self):
+        """Stop recording"""
+        if self.video_writer:
+            self.video_writer.release()
+            self.video_writer = None
+        self.recording = False
+        print("⏹️  Recording stopped")
+    
+    def save_screenshot(self, frame):
+        """Save screenshot"""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshots/screenshot_{timestamp}.jpg"
+        cv2.imwrite(filename, frame)
+        print(f"📸 Screenshot: {filename}")
+        return filename
+    
+    def run(self):
+        """Main detection loop - OPTIMIZED"""
+        cap = cv2.VideoCapture(0)
+        # REDUCED RESOLUTION FOR BETTER FPS
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        cap.set(cv2.CAP_PROP_FPS, 30)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        
+        if not cap.isOpened():
+            print("❌ ERROR: Cannot open camera")
+            return
+        
+        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        print("🎥 Starting Detection (Optimized)")
+        print("=" * 70)
+        print("Controls: R=Record | S=Screenshot | C=Clear | Q=Quit")
+        print("=" * 70 + "\n")
+        
+        # OPTIMIZED MEDIAPIPE SETTINGS
+        with self.mp_hands.Hands(
+            static_image_mode=False,
+            max_num_hands=2,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
+            model_complexity=0  # LITE MODEL for better FPS
+        ) as hands:
+            
+            frame_skip = 0  # Process every frame
+            
+            while True:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                frame = cv2.flip(frame, 1)
+                fps, avg_fps = self.calculate_fps()
+                
+                hand_detected = False
+                num_hands = 0
+                letter = "?"
+                confidence = 0.0
+                hindi = ""
+                
+                # Process frame
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = hands.process(rgb_frame)
+                
+                hand_detected = bool(results.multi_hand_landmarks)
+                num_hands = len(results.multi_hand_landmarks) if hand_detected else 0
+                
+                # Draw landmarks - simplified for speed
+                if results.multi_hand_landmarks:
+                    for hand_landmarks in results.multi_hand_landmarks:
+                        self.mp_draw.draw_landmarks(
+                            frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS,
+                            landmark_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
+                                color=(0, 255, 0), thickness=1, circle_radius=1),
+                            connection_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
+                                color=(255, 255, 255), thickness=1)
+                        )
+                
+                # Prediction
+                if hand_detected:
+                    features = self.extract_two_hands(results).reshape(1, -1)
+                    probs = self.model.predict_proba(features)[0]
+                    idx = np.argmax(probs)
+                    letter = str(self.label_encoder.inverse_transform([idx])[0]).upper()
+                    confidence = probs[idx] * 100
+                    hindi = self.HINDI_MAP.get(letter, "")
+                    
+                    self.buffer.append(letter)
+                    final_letter = Counter(self.buffer).most_common(1)[0][0]
+                    
+                    if final_letter != self.last_spoken and confidence > 65:
+                        self.last_spoken = final_letter
+                        self.word_builder.append(final_letter)
+                        if len(self.word_builder) > 15:
+                            self.word_builder = self.word_builder[-15:]
+                    
+                    letter = final_letter
+                else:
+                    # Clear word builder if no hands detected for stability
+                    if len(self.buffer) == 0:
+                        self.last_spoken = ""
+                
+                prediction_data = {
+                    'letter': letter, 'hindi': hindi, 'confidence': confidence,
+                    'hand_detected': hand_detected, 'num_hands': num_hands,
+                    'fps': fps, 'avg_fps': avg_fps
+                }
+                
+                frame = self.draw_overlay(frame, prediction_data)
+                
+                if self.recording and self.video_writer:
+                    self.video_writer.write(frame)
+                
+                cv2.imshow("SignSync - Two Hand Detection", frame)
+                
+                key = cv2.waitKey(1) & 0xFF
+                
+                if key == ord('q'):
+                    print("\n✅ Exiting...")
+                    break
+                elif key == ord('r'):
+                    if not self.recording:
+                        self.start_recording((frame_width, frame_height))
+                    else:
+                        self.stop_recording()
+                elif key == ord('s'):
+                    self.save_screenshot(frame)
+                elif key == ord('c'):
+                    self.word_builder.clear()
+                    self.last_spoken = ""
+                    print("🗑️  Word cleared")
+        
+        if self.recording:
+            self.stop_recording()
+        
+        cap.release()
+        cv2.destroyAllWindows()
+        
+        if self.fps_history:
+            print(f"\n📊 Average FPS: {sum(self.fps_history) / len(self.fps_history):.2f}")
+        print("✅ Program terminated")
 
-        # Apply semi-transparent overlay
-        alpha = 0.6
-        frame = cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
+def main():
+    try:
+        detector = SignLanguageDetector()
+        detector.run()
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
-        if recording:
-            cv2.putText(frame, "REC", (frame.shape[1] - 60, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 3)
-            video_writer.write(frame)
-
-        cv2.imshow("Two-Hand ISL Detector", frame)
-
-        key = cv2.waitKey(1) & 0xFF
-
-        if key == ord('r'):
-            if not recording:
-                ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                path = f"recordings/demo_{ts}.mp4"
-                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-                video_writer = cv2.VideoWriter(path, fourcc, 30, (frame.shape[1], frame.shape[0]))
-                recording = True
-            else:
-                recording = False
-                video_writer.release()
-                video_writer = None
-
-        if key == ord('s'):
-            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-            cv2.imwrite(f"screenshots/screenshot_{ts}.jpg", frame)
-
-        if key == ord('c'):  # Clear word builder
-            word_builder = []
-
-        if key == ord('q'):
-            break
-
-cap.release()
-if video_writer:
-    video_writer.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    main()
