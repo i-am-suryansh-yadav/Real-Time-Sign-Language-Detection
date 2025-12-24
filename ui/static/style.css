@@ -436,55 +436,46 @@ nav {
     gap: 15px;
 }
 
-/* Word Display Box */
-.word-display-box {
+/* Instructions Box */
+.instructions-box {
     background: var(--card-bg);
     border: 2px solid var(--border-glow);
     border-radius: 15px;
     padding: 20px;
-    text-align: center;
 }
 
-.word-display-box h3 {
+.instructions-box h3 {
     font-size: 16px;
     color: var(--primary-neon);
     margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
-}
-
-.word-output {
-    background: rgba(0, 0, 0, 0.5);
-    border: 2px solid var(--primary-neon);
-    border-radius: 10px;
-    padding: 15px;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--primary-neon);
     text-shadow: 0 0 10px var(--primary-neon);
-    min-height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 15px;
-    letter-spacing: 2px;
 }
 
-.clear-word-btn {
-    background: linear-gradient(135deg, #ff6b00, #ff0000);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
+.instructions-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.instructions-box li {
+    padding: 8px 0;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    line-height: 1.6;
+    border-bottom: 1px solid rgba(0, 240, 255, 0.1);
 }
 
-.clear-word-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 107, 0, 0.5);
+.instructions-box li:last-child {
+    border-bottom: none;
+}
+
+.instructions-box li:before {
+    content: "→ ";
+    color: var(--primary-neon);
+    font-weight: bold;
+    margin-right: 8px;
 }
 
 /* Info Box */
@@ -731,9 +722,40 @@ nav {
     text-shadow: 0 0 5px var(--primary-neon);
 }
 
+/* Roadmap List */
+.roadmap-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+.roadmap-list li {
+    padding: 15px;
+    margin: 10px 0;
+    background: rgba(30, 30, 60, 0.4);
+    border-left: 4px solid var(--primary-neon);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.8;
+    transition: all 0.3s ease;
+}
+
+.roadmap-list li:hover {
+    background: rgba(30, 30, 60, 0.6);
+    border-left-color: var(--secondary-neon);
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.2);
+}
+
+.roadmap-list li strong {
+    color: var(--primary-neon);
+    text-shadow: 0 0 5px var(--primary-neon);
+}
+
 .about-future p {
     color: rgba(255, 255, 255, 0.8);
     line-height: 1.8;
+    margin-bottom: 10px;
 }
 
 /* Footer */

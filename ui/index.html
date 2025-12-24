@@ -52,7 +52,7 @@
             </div>
         </section>
 
-        <!-- CAMERA SECTION - FIXED LAYOUT -->
+        <!-- CAMERA SECTION - COMPACT LAYOUT -->
         <section id="camera-section" class="hidden camera-section-compact">
             <div class="camera-container-wrapper">
                 <h2 class="section-title">Sign Language Detection</h2>
@@ -84,13 +84,6 @@
                             </button>
                         </div>
                         
-                        <!-- Word Display -->
-                        <div class="word-display-box">
-                            <h3>Detected Word:</h3>
-                            <div id="word-output" class="word-output">...</div>
-                            <button id="clear-word" class="clear-word-btn">Clear Word</button>
-                        </div>
-                        
                         <!-- Info Box -->
                         <div class="info-box">
                             <div class="info-item">
@@ -101,6 +94,17 @@
                                 <span class="info-label">FPS:</span>
                                 <span id="fps-text" class="info-value">0</span>
                             </div>
+                        </div>
+                        
+                        <!-- Instructions -->
+                        <div class="instructions-box">
+                            <h3>Instructions:</h3>
+                            <ul>
+                                <li>Click "Start Detection" to begin</li>
+                                <li>Show your hand signs clearly</li>
+                                <li>Watch predictions in real-time</li>
+                                <li>Best results with good lighting</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -134,9 +138,9 @@
                     <p>Optimized for 20+ FPS even with two-hand detection.</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">✍️</div>
-                    <h3>Word Builder</h3>
-                    <p>Constructs words from sequential sign predictions.</p>
+                    <div class="feature-icon">🎯</div>
+                    <h3>Real-Time Detection</h3>
+                    <p>Instant sign recognition with minimal latency.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">👐</div>
@@ -145,8 +149,8 @@
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🎥</div>
-                    <h3>Real-Time Detection</h3>
-                    <p>Instant sign recognition with minimal latency.</p>
+                    <h3>Live Streaming</h3>
+                    <p>Browser-based real-time video processing.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">🌐</div>
@@ -200,7 +204,15 @@
 
                     <div class="about-future">
                         <h3>Future Roadmap</h3>
-                        <p>Future updates may include voice output, expanded gesture support, and multi-language recognition capabilities.</p>
+                        <ul class="roadmap-list">
+                            <li>🔤 <strong>Word Formation Feature</strong> - Automatic word building from sequential letter detection</li>
+                            <li>🔊 <strong>Voice Output Integration</strong> - Text-to-speech for detected signs and words</li>
+                            <li>🌍 <strong>Multi-Language Support</strong> - Expand beyond ISL to other sign languages</li>
+                            <li>📱 <strong>Mobile Application</strong> - Native iOS and Android apps</li>
+                            <li>🤖 <strong>Sentence Formation</strong> - Grammar-aware sentence construction</li>
+                            <li>☁️ <strong>Cloud Deployment</strong> - Scalable web-based solution</li>
+                            <li>🎓 <strong>Learning Mode</strong> - Interactive tutorials for learning sign language</li>
+                        </ul>
                     </div>
                 </div>
             </div>

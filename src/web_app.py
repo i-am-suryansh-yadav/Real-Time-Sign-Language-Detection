@@ -1,6 +1,6 @@
 """
 web_app.py - OPTIMIZED Flask Web Application
-Features: Fast camera launch, better FPS, word formation display
+Real-time sign language detection without word formation
 OPTIMIZED FOR PERFORMANCE
 """
 from flask import Flask, Response, render_template, jsonify
@@ -44,13 +44,10 @@ class AppState:
         self.cap = None
         self.running = False
         self.detecting = False
-        self.buffer = deque(maxlen=8)  # Reduced for faster response
-        self.word_builder = []
-        self.last_spoken = ""
+        self.buffer = deque(maxlen=8)
         self.prev_time = time.time()
         self.fps_history = deque(maxlen=20)
         self.lock = threading.Lock()
-        self.no_hand_frames = 0  # Track frames without hands
         
         self.mp_hands = mp.solutions.hands
         self.mp_draw = mp.solutions.drawing_utils
@@ -88,7 +85,6 @@ def calculate_fps():
 # ==================== VIDEO GENERATOR ====================
 def generate_frames():
     """OPTIMIZED: Video generation with better FPS"""
-    # LITE MODEL for better performance
     with state.mp_hands.Hands(
         static_image_mode=False,
         max_num_hands=2,
@@ -126,7 +122,6 @@ def generate_frames():
                 
                 # Simplified landmark drawing for speed
                 if results.multi_hand_landmarks:
-                    state.no_hand_frames = 0  # Reset counter
                     for hand_landmarks in results.multi_hand_landmarks:
                         state.mp_draw.draw_landmarks(
                             frame, hand_landmarks, state.mp_hands.HAND_CONNECTIONS,
@@ -135,13 +130,6 @@ def generate_frames():
                             connection_drawing_spec=mp.solutions.drawing_utils.DrawingSpec(
                                 color=(255, 255, 255), thickness=1)
                         )
-                else:
-                    state.no_hand_frames += 1
-                    # Clear word if no hands for 15 frames (~0.5 seconds)
-                    if state.no_hand_frames > 15:
-                        state.word_builder.clear()
-                        state.last_spoken = ""
-                        state.no_hand_frames = 0
                 
                 # Prediction
                 if hand_detected:
@@ -154,13 +142,6 @@ def generate_frames():
                     state.buffer.append(pred_letter)
                     letter = Counter(state.buffer).most_common(1)[0][0]
                     hindi = HINDI_MAP.get(letter, "")
-                    
-                    # Word builder with confidence threshold
-                    if letter != state.last_spoken and confidence > 65:
-                        state.last_spoken = letter
-                        state.word_builder.append(letter)
-                        if len(state.word_builder) > 15:
-                            state.word_builder = state.word_builder[-15:]
             
             # ==================== SIMPLIFIED OVERLAY ====================
             # Top bar
@@ -185,15 +166,6 @@ def generate_frames():
                 cv2.putText(frame, f"{confidence:.1f}%", (10, h - 15), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
             
-            # Word builder - ALWAYS SHOW when detecting
-            if state.detecting:
-                word_text = "Word: " + (''.join(state.word_builder) if state.word_builder else "...")
-                word_w = min(len(word_text) * 12 + 20, w - 40)
-                
-                cv2.rectangle(frame, (w - word_w, 50), (w, 80), (10, 10, 30), -1)
-                cv2.putText(frame, word_text, (w - word_w + 10, 70), 
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
-            
             # Encode
             _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
@@ -210,13 +182,12 @@ def start_camera():
         try:
             if state.cap is None or not state.cap.isOpened():
                 state.cap = cv2.VideoCapture(0)
-                # Quick settings
                 state.cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
                 state.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
                 state.cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
                 state.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                 
-                # Warm up camera with one frame read
+                # Warm up camera
                 state.cap.read()
             
             state.running = True
@@ -234,27 +205,10 @@ def toggle_detection():
         
         if not state.detecting:
             state.buffer.clear()
-            state.last_spoken = ""
-            state.no_hand_frames = 0
         
         print(f"🔄 Detection {'ON' if state.detecting else 'OFF'}")
     
     return jsonify({"detecting": state.detecting})
-
-@app.route("/clear_word", methods=["POST"])
-def clear_word():
-    with state.lock:
-        state.word_builder.clear()
-        state.last_spoken = ""
-        state.no_hand_frames = 0
-        print("🗑️  Word cleared")
-    return jsonify({"status": "word cleared"})
-
-@app.route("/get_word", methods=["GET"])
-def get_word():
-    """NEW: Get current word"""
-    with state.lock:
-        return jsonify({"word": ''.join(state.word_builder)})
 
 @app.route("/stop", methods=["POST"])
 def stop_camera():
@@ -267,10 +221,7 @@ def stop_camera():
             state.cap = None
         
         state.buffer.clear()
-        state.word_builder.clear()
-        state.last_spoken = ""
         state.fps_history.clear()
-        state.no_hand_frames = 0
         
         print("⏹️  Camera stopped")
     
@@ -286,9 +237,17 @@ def status():
         return jsonify({
             "running": state.running,
             "detecting": state.detecting,
-            "word": ''.join(state.word_builder),
             "fps": int(sum(state.fps_history) / len(state.fps_history)) if state.fps_history else 0
         })
+
+# ==================== ERROR HANDLERS ====================
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
 
 # ==================== CLEANUP ====================
 def cleanup():
