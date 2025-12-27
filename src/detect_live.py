@@ -51,10 +51,14 @@ class SignLanguageDetector:
         self.prev_time = time.time()
         self.fps_history = deque(maxlen=30)
         
+        # IMPROVED: Track no-hand frames
+        self.no_hand_count = 0
+        self.no_hand_threshold = 30  # Clear word after 30 frames with no hands
+        
         print("=" * 70 + "\n")
     
     def extract_two_hands(self, results):
-        """Extract features from both hands (126 features) - OPTIMIZED"""
+        """Extract features from both hands (126 features) - SAME AS ORIGINAL"""
         left_hand = np.zeros(63, dtype=np.float32)
         right_hand = np.zeros(63, dtype=np.float32)
         
@@ -161,7 +165,7 @@ class SignLanguageDetector:
         return filename
     
     def run(self):
-        """Main detection loop - OPTIMIZED"""
+        """Main detection loop - FIXED"""
         cap = cv2.VideoCapture(0)
         # REDUCED RESOLUTION FOR BETTER FPS
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -189,8 +193,6 @@ class SignLanguageDetector:
             min_tracking_confidence=0.5,
             model_complexity=0  # LITE MODEL for better FPS
         ) as hands:
-            
-            frame_skip = 0  # Process every frame
             
             while True:
                 ret, frame = cap.read()
@@ -224,8 +226,10 @@ class SignLanguageDetector:
                                 color=(255, 255, 255), thickness=1)
                         )
                 
-                # Prediction
+                # IMPROVED: Better prediction handling
                 if hand_detected:
+                    self.no_hand_count = 0  # Reset counter
+                    
                     features = self.extract_two_hands(results).reshape(1, -1)
                     probs = self.model.predict_proba(features)[0]
                     idx = np.argmax(probs)
@@ -236,7 +240,8 @@ class SignLanguageDetector:
                     self.buffer.append(letter)
                     final_letter = Counter(self.buffer).most_common(1)[0][0]
                     
-                    if final_letter != self.last_spoken and confidence > 65:
+                    # IMPROVED: Only add to word if confidence is good
+                    if final_letter != self.last_spoken and confidence > 60:  # Lower threshold to 60
                         self.last_spoken = final_letter
                         self.word_builder.append(final_letter)
                         if len(self.word_builder) > 15:
@@ -244,9 +249,14 @@ class SignLanguageDetector:
                     
                     letter = final_letter
                 else:
-                    # Clear word builder if no hands detected for stability
-                    if len(self.buffer) == 0:
+                    # IMPROVED: Clear word if no hands for too long
+                    self.no_hand_count += 1
+                    if self.no_hand_count >= self.no_hand_threshold:
+                        if self.word_builder:
+                            print("🗑️  Word cleared (no hands detected)")
+                            self.word_builder.clear()
                         self.last_spoken = ""
+                        self.buffer.clear()
                 
                 prediction_data = {
                     'letter': letter, 'hindi': hindi, 'confidence': confidence,

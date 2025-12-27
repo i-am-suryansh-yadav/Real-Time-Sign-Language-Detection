@@ -57,7 +57,7 @@ print("=" * 70 + "\n")
 
 # ==================== HELPER FUNCTIONS ====================
 def extract_two_hands(results):
-    """OPTIMIZED: Fast feature extraction"""
+    """SAME AS ORIGINAL: Fast feature extraction"""
     left_hand = np.zeros(63, dtype=np.float32)
     right_hand = np.zeros(63, dtype=np.float32)
     
@@ -84,7 +84,7 @@ def calculate_fps():
 
 # ==================== VIDEO GENERATOR ====================
 def generate_frames():
-    """OPTIMIZED: Video generation with better FPS"""
+    """IMPROVED: Video generation with better FPS"""
     with state.mp_hands.Hands(
         static_image_mode=False,
         max_num_hands=2,
@@ -93,11 +93,9 @@ def generate_frames():
         model_complexity=0  # LITE MODEL
     ) as hands:
         
+        frame_count = 0
+        
         while state.running:
-            with state.lock:
-                if state.cap is None or not state.cap.isOpened():
-                    break
-            
             success, frame = state.cap.read()
             if not success:
                 break
@@ -106,6 +104,7 @@ def generate_frames():
             h, w = frame.shape[:2]
             
             fps, avg_fps = calculate_fps()
+            frame_count += 1
             
             hand_detected = False
             num_hands = 0
@@ -113,7 +112,10 @@ def generate_frames():
             confidence = 0.0
             hindi = ""
             
-            if state.detecting:
+            # IMPROVED: Skip every other frame for better FPS
+            should_process = (frame_count % 2 == 0) if state.detecting else False
+            
+            if should_process:
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = hands.process(rgb_frame)
                 
@@ -166,8 +168,9 @@ def generate_frames():
                 cv2.putText(frame, f"{confidence:.1f}%", (10, h - 15), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
             
-            # Encode
-            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            # IMPROVED: Better encoding for speed
+            encode_param = [cv2.IMWRITE_JPEG_QUALITY, 80]
+            _, buffer = cv2.imencode('.jpg', frame, encode_param)
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 # ==================== ROUTES ====================
@@ -177,7 +180,7 @@ def index():
 
 @app.route("/start", methods=["POST"])
 def start_camera():
-    """OPTIMIZED: Faster camera initialization"""
+    """Start camera"""
     with state.lock:
         try:
             if state.cap is None or not state.cap.isOpened():
@@ -188,7 +191,8 @@ def start_camera():
                 state.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
                 
                 # Warm up camera
-                state.cap.read()
+                for _ in range(3):
+                    state.cap.read()
             
             state.running = True
             state.detecting = False
