@@ -84,7 +84,7 @@ def calculate_fps():
 
 # ==================== VIDEO GENERATOR ====================
 def generate_frames():
-    """IMPROVED: Video generation with better FPS"""
+    """Video generation - NO FRAME SKIPPING"""
     with state.mp_hands.Hands(
         static_image_mode=False,
         max_num_hands=2,
@@ -92,8 +92,6 @@ def generate_frames():
         min_tracking_confidence=0.5,
         model_complexity=0  # LITE MODEL
     ) as hands:
-        
-        frame_count = 0
         
         while state.running:
             success, frame = state.cap.read()
@@ -104,7 +102,6 @@ def generate_frames():
             h, w = frame.shape[:2]
             
             fps, avg_fps = calculate_fps()
-            frame_count += 1
             
             hand_detected = False
             num_hands = 0
@@ -112,10 +109,7 @@ def generate_frames():
             confidence = 0.0
             hindi = ""
             
-            # IMPROVED: Skip every other frame for better FPS
-            should_process = (frame_count % 2 == 0) if state.detecting else False
-            
-            if should_process:
+            if state.detecting:
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = hands.process(rgb_frame)
                 
@@ -145,7 +139,7 @@ def generate_frames():
                     letter = Counter(state.buffer).most_common(1)[0][0]
                     hindi = HINDI_MAP.get(letter, "")
             
-            # ==================== SIMPLIFIED OVERLAY ====================
+            # SIMPLIFIED OVERLAY
             # Top bar
             cv2.rectangle(frame, (0, 0), (w, 40), (10, 10, 30), -1)
             
@@ -168,9 +162,8 @@ def generate_frames():
                 cv2.putText(frame, f"{confidence:.1f}%", (10, h - 15), 
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
             
-            # IMPROVED: Better encoding for speed
-            encode_param = [cv2.IMWRITE_JPEG_QUALITY, 80]
-            _, buffer = cv2.imencode('.jpg', frame, encode_param)
+            # Encode frame
+            _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])
             yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
 
 # ==================== ROUTES ====================

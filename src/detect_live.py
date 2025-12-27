@@ -44,16 +44,10 @@ class SignLanguageDetector:
         self.mp_draw_styles = mp.solutions.drawing_styles
         
         self.buffer = deque(maxlen=10)
-        self.word_builder = []
-        self.last_spoken = ""
         self.recording = False
         self.video_writer = None
         self.prev_time = time.time()
         self.fps_history = deque(maxlen=30)
-        
-        # IMPROVED: Track no-hand frames
-        self.no_hand_count = 0
-        self.no_hand_threshold = 30  # Clear word after 30 frames with no hands
         
         print("=" * 70 + "\n")
     
@@ -125,13 +119,6 @@ class SignLanguageDetector:
             cv2.putText(frame, f"Conf: {confidence:.1f}%", (10, h - 15), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 1)
         
-        # Word builder
-        if self.word_builder:
-            word_text = "Word: " + ''.join(self.word_builder)
-            cv2.rectangle(frame, (w - min(len(word_text) * 15 + 20, w), 55), (w, 85), (20, 20, 40), -1)
-            cv2.putText(frame, word_text, (w - min(len(word_text) * 15 + 10, w - 10), 75), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 1)
-        
         # Recording indicator
         if self.recording:
             cv2.circle(frame, (w - 30, 25), 8, (0, 0, 255), -1)
@@ -182,7 +169,7 @@ class SignLanguageDetector:
         
         print("🎥 Starting Detection (Optimized)")
         print("=" * 70)
-        print("Controls: R=Record | S=Screenshot | C=Clear | Q=Quit")
+        print("Controls: R=Record | S=Screenshot | Q=Quit")
         print("=" * 70 + "\n")
         
         # OPTIMIZED MEDIAPIPE SETTINGS
@@ -228,8 +215,6 @@ class SignLanguageDetector:
                 
                 # IMPROVED: Better prediction handling
                 if hand_detected:
-                    self.no_hand_count = 0  # Reset counter
-                    
                     features = self.extract_two_hands(results).reshape(1, -1)
                     probs = self.model.predict_proba(features)[0]
                     idx = np.argmax(probs)
@@ -239,24 +224,9 @@ class SignLanguageDetector:
                     
                     self.buffer.append(letter)
                     final_letter = Counter(self.buffer).most_common(1)[0][0]
-                    
-                    # IMPROVED: Only add to word if confidence is good
-                    if final_letter != self.last_spoken and confidence > 60:  # Lower threshold to 60
-                        self.last_spoken = final_letter
-                        self.word_builder.append(final_letter)
-                        if len(self.word_builder) > 15:
-                            self.word_builder = self.word_builder[-15:]
-                    
                     letter = final_letter
                 else:
-                    # IMPROVED: Clear word if no hands for too long
-                    self.no_hand_count += 1
-                    if self.no_hand_count >= self.no_hand_threshold:
-                        if self.word_builder:
-                            print("🗑️  Word cleared (no hands detected)")
-                            self.word_builder.clear()
-                        self.last_spoken = ""
-                        self.buffer.clear()
+                    self.buffer.clear()
                 
                 prediction_data = {
                     'letter': letter, 'hindi': hindi, 'confidence': confidence,
@@ -283,10 +253,6 @@ class SignLanguageDetector:
                         self.stop_recording()
                 elif key == ord('s'):
                     self.save_screenshot(frame)
-                elif key == ord('c'):
-                    self.word_builder.clear()
-                    self.last_spoken = ""
-                    print("🗑️  Word cleared")
         
         if self.recording:
             self.stop_recording()
