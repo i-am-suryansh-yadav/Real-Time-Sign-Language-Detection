@@ -162,18 +162,162 @@
     </div>
 
     <!-- Demo Page -->
-    <div id="demo-page" class="page">
-        <section class="content-section">
-            <h2 class="section-title">Demo</h2>
-            <p class="demo-description">Watch a demonstration of SignSync in action.</p>
-            <div class="video-demo-container">
-                <video controls width="800">
+<!-- Demo Page -->
+<div id="demo-page" class="page">
+    <section class="content-section">
+        <h2 class="section-title">Demo</h2>
+        <p class="demo-description">Watch a demonstration of SignSync in action.</p>
+        
+        <div class="video-demo-container">
+            <div class="video-wrapper-demo">
+                <!-- Simplified video tag with maximum compatibility -->
+                <video 
+                    id="demo-video" 
+                    width="800" 
+                    controls 
+                    preload="none"
+                    style="background: #000; border-radius: 10px; max-width: 100%;">
                     <source src="/static/demo.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
+                    <p style="color: white; padding: 20px;">
+                        Your browser doesn't support HTML5 video. 
+                        <a href="/static/demo.mp4" style="color: #6c63ff;">Download the video</a> instead.
+                    </p>
                 </video>
             </div>
-        </section>
-    </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button id="force-play" style="padding: 12px 24px; background: #6c63ff; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);">
+                    ▶️ Click Here to Play Video
+                </button>
+                <p style="margin-top: 10px; color: #888; font-size: 14px;">
+                    If video doesn't play automatically, click the button above or the play button on the video player
+                </p>
+            </div>
+            
+            <!-- Status indicator -->
+            <div id="video-status" style="margin-top: 15px; padding: 10px; background: #1a1a2e; border-radius: 8px; color: #0f0; font-family: monospace; min-height: 30px; width: 100%; max-width: 800px; text-align: center;">
+                Ready to play
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+.video-demo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+}
+
+.video-wrapper-demo {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    max-width: 100%;
+}
+
+#force-play:hover {
+    background: #5a52d5;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 99, 255, 0.5);
+}
+
+#force-play:active {
+    transform: translateY(0);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('demo-video');
+    const forcePlayBtn = document.getElementById('force-play');
+    const status = document.getElementById('video-status');
+    
+    if (!video) {
+        status.textContent = '❌ Video element not found';
+        status.style.color = '#ff4444';
+        return;
+    }
+    
+    // Force play button
+    forcePlayBtn.addEventListener('click', function() {
+        status.textContent = '🔄 Attempting to play...';
+        status.style.color = '#ffaa00';
+        
+        video.load(); // Force reload
+        
+        const playPromise = video.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                status.textContent = '✅ Video is playing!';
+                status.style.color = '#00ff00';
+                forcePlayBtn.textContent = '⏸️ Playing...';
+                forcePlayBtn.disabled = true;
+                forcePlayBtn.style.opacity = '0.6';
+            }).catch(error => {
+                status.textContent = '❌ Error: ' + error.message + ' - Try clicking the video player controls';
+                status.style.color = '#ff4444';
+                console.error('Play error:', error);
+            });
+        }
+    });
+    
+    // Video event handlers
+    video.addEventListener('play', function() {
+        status.textContent = '▶️ Video is playing!';
+        status.style.color = '#00ff00';
+    });
+    
+    video.addEventListener('pause', function() {
+        if (video.currentTime > 0 && video.currentTime < video.duration) {
+            status.textContent = '⏸️ Video paused';
+            status.style.color = '#ffaa00';
+            forcePlayBtn.disabled = false;
+            forcePlayBtn.textContent = '▶️ Resume Video';
+            forcePlayBtn.style.opacity = '1';
+        }
+    });
+    
+    video.addEventListener('ended', function() {
+        status.textContent = '✅ Video finished!';
+        status.style.color = '#00ff00';
+        forcePlayBtn.disabled = false;
+        forcePlayBtn.textContent = '🔄 Play Again';
+        forcePlayBtn.style.opacity = '1';
+    });
+    
+    video.addEventListener('loadedmetadata', function() {
+        status.textContent = `✅ Video loaded: ${video.duration.toFixed(1)}s duration`;
+        status.style.color = '#00ff00';
+    });
+    
+    video.addEventListener('error', function() {
+        let errorText = 'Unknown error';
+        if (video.error) {
+            switch(video.error.code) {
+                case 1: errorText = 'Loading aborted'; break;
+                case 2: errorText = 'Network error'; break;
+                case 3: errorText = 'Decode error - video may be corrupted'; break;
+                case 4: errorText = 'Format not supported'; break;
+            }
+        }
+        status.textContent = '❌ Error: ' + errorText;
+        status.style.color = '#ff4444';
+    });
+    
+    video.addEventListener('waiting', function() {
+        status.textContent = '⏳ Buffering...';
+        status.style.color = '#ffaa00';
+    });
+    
+    video.addEventListener('canplay', function() {
+        status.textContent = '✅ Video ready to play - click the button or video controls';
+        status.style.color = '#00ff00';
+    });
+});
+</script>
 
     <!-- About Page -->
     <div id="about-page" class="page">

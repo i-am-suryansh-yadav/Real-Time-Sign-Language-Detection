@@ -10,12 +10,39 @@ import numpy as np
 import joblib
 import time
 import threading
+import os
 from collections import deque, Counter
 
-app = Flask(__name__, template_folder="../ui", static_folder="../ui/static", static_url_path="/static")
+# ==================== PATH CONFIGURATION ====================
+# Get the absolute path of the current file's directory (src folder)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Go up one level to project root
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+UI_PATH = os.path.join(PROJECT_ROOT, "ui")
+STATIC_PATH = os.path.join(UI_PATH, "static")
+MODEL_PATH = os.path.join(PROJECT_ROOT, "models", "rf_model.joblib")
+
+# Print paths for debugging
+print("=" * 70)
+print("📂 Path Configuration:")
+print(f"BASE_DIR (src): {BASE_DIR}")
+print(f"PROJECT_ROOT: {PROJECT_ROOT}")
+print(f"UI_PATH: {UI_PATH}")
+print(f"STATIC_PATH: {STATIC_PATH}")
+print(f"MODEL_PATH: {MODEL_PATH}")
+print(f"\n📁 File Check:")
+print(f"UI folder exists: {os.path.exists(UI_PATH)}")
+print(f"Static folder exists: {os.path.exists(STATIC_PATH)}")
+print(f"demo.mp4 exists: {os.path.exists(os.path.join(STATIC_PATH, 'demo.mp4'))}")
+print(f"Model file exists: {os.path.exists(MODEL_PATH)}")
+
+app = Flask(__name__, 
+            template_folder=UI_PATH, 
+            static_folder=STATIC_PATH, 
+            static_url_path="/static")
 
 # ==================== CONFIG ====================
-MODEL_PATH = "models/rf_model.joblib"
 CAMERA_WIDTH = 640
 CAMERA_HEIGHT = 480
 CAMERA_FPS = 30
@@ -24,12 +51,17 @@ CAMERA_FPS = 30
 print("=" * 70)
 print("🤖 Loading Model...")
 try:
+    if not os.path.exists(MODEL_PATH):
+        raise FileNotFoundError(f"Model file not found at: {MODEL_PATH}")
+    
     model_data = joblib.load(MODEL_PATH)
     model = model_data["model"]
     label_encoder = model_data["label_encoder"]
     print(f"✅ Model loaded | Classes: {len(label_encoder.classes_)}")
 except Exception as e:
-    print(f"❌ Error: {str(e)}")
+    print(f"❌ Error loading model: {str(e)}")
+    print(f"❌ Expected model at: {MODEL_PATH}")
+    print(f"\n💡 Please ensure 'rf_model.joblib' exists in the 'models' folder")
     raise
 
 HINDI_MAP = {
@@ -171,6 +203,49 @@ def generate_frames():
 def index():
     return render_template("index.html")
 
+# Add range request support for video streaming
+@app.route('/static/<path:filename>')
+def serve_static_with_range(filename):
+    """Serve static files with range request support for video streaming"""
+    from flask import send_from_directory, request, make_response
+    import os
+    
+    file_path = os.path.join(app.static_folder, filename)
+    
+    if not os.path.exists(file_path):
+        return "File not found", 404
+    
+    # Check if this is a video file
+    if filename.endswith(('.mp4', '.webm', '.ogg')):
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Check for Range header
+        range_header = request.headers.get('Range')
+        
+        if range_header:
+            # Parse range header
+            byte_range = range_header.replace('bytes=', '').split('-')
+            start = int(byte_range[0]) if byte_range[0] else 0
+            end = int(byte_range[1]) if len(byte_range) > 1 and byte_range[1] else file_size - 1
+            
+            # Read the requested chunk
+            with open(file_path, 'rb') as f:
+                f.seek(start)
+                data = f.read(end - start + 1)
+            
+            # Create response with partial content
+            response = make_response(data)
+            response.status_code = 206  # Partial Content
+            response.headers['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+            response.headers['Content-Length'] = str(len(data))
+            response.headers['Content-Type'] = 'video/mp4'
+            response.headers['Accept-Ranges'] = 'bytes'
+            return response
+    
+    # For non-video files or if no range requested, serve normally
+    return send_from_directory(app.static_folder, filename)
+
 @app.route("/start", methods=["POST"])
 def start_camera():
     """Start camera"""
@@ -220,7 +295,7 @@ def stop_camera():
         state.buffer.clear()
         state.fps_history.clear()
         
-        print("⏹️  Camera stopped")
+        print("⏹️ Camera stopped")
     
     return jsonify({"status": "camera stopped"})
 
